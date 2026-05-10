@@ -19,7 +19,8 @@ derby.log
 .ivy2/
 
 # Data
-data/output/
+data/output/*
+!data/output/.gitkeep
 *.parquet
 
 # Python build
