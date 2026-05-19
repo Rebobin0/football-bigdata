@@ -21,7 +21,10 @@ football-bigdata/
 │
 ├── src/
 │   └── spark_jobs/
-│
+|      ├── explore/
+|      ├── processing/
+|      ├── test/
+|      └── utils/
 ├── notebooks/
 ├── data/
 ├── requirements.txt
@@ -128,5 +131,5 @@ source setup.sh
 # Run Spark Test
 
 ```bash
-python src/spark_jobs/test_s3.py
+python src/spark_jobs/test/test_s3.py
 ```
