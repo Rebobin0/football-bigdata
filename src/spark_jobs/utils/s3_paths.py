@@ -34,6 +34,10 @@ PROCESSED_FACT_MATCHES_API_FOOTBALL = s3_path(
     "processed/api_football/fact_matches/"
 )
 
+PROCESSED_FACT_STANDINGS_API_FOOTBALL = s3_path(
+    "processed/api_football/fact_standings/"
+)
+
 PROCESSED_FACT_MATCHES_FOOTBALL_DATA = s3_path(
     "processed/football_data_org/fact_matches/"
 )
@@ -44,4 +48,8 @@ PROCESSED_FACT_MATCHES = s3_path(
 
 PROCESSED_DIM_TEAMS = s3_path(
     "processed/dim_teams/"
+)
+
+PROCESSED_DIM_TEAMS_API_FOOTBALL = s3_path(
+    "processed/api_football/dim_teams/"
 )
