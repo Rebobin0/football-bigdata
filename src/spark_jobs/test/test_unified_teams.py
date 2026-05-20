@@ -7,10 +7,6 @@ from src.spark_jobs.utils.s3_paths import (
 spark = create_spark_session("Test Unified Teams")
 df_unified = spark.read.parquet(PROCESSED_DIM_TEAMS_UNIFIED)
 
-df_unified.groupBy("team_id").count() \
-    .filter(col("count") > 1) \
-    .show(50, truncate=False)
-
 df_unified.groupBy("league", "season", "source").count() \
     .orderBy("league", "season", "source") \
     .show(100, truncate=False)
