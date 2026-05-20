@@ -30,26 +30,18 @@ RAW_TRANSFERMARKT_PLAYERS = s3_path("raw/transfermarkt/players/")
 RAW_TRANSFERMARKT_PLAYER_VALUATIONS = s3_path("raw/transfermarkt/player_valuations/")
 
 # PROCESSED
-PROCESSED_FACT_MATCHES_API_FOOTBALL = s3_path(
-    "processed/api_football/fact_matches/"
-)
+# MATCHES
+PROCESSED_FACT_MATCHES_API_FOOTBALL = s3_path("processed/api_football/fact_matches/")
+PROCESSED_FACT_MATCHES_FOOTBALL_DATA = s3_path("processed/football_data_org/fact_matches/")
+PROCESSED_FACT_MATCHES_UNIFIED = s3_path("processed/fact_matches/")
 
-PROCESSED_FACT_MATCHES_FOOTBALL_DATA = s3_path(
-    "processed/football_data_org/fact_matches/"
-)
+# TEAMS
+PROCESSED_DIM_TEAMS_API_FOOTBALL = s3_path("processed/api_football/dim_teams/")
+PROCESSED_DIM_TEAMS_FOOTBALL_DATA = s3_path("processed/football_data_org/dim_teams/")
+PROCESSED_DIM_CLUBS_TRANSFERMARKT = s3_path("processed/transfermarkt/dim_clubs/")
+PROCESSED_DIM_TEAMS_UNIFIED = s3_path("processed/dim_teams/")
 
-PROCESSED_FACT_MATCHES_UNIFIED = s3_path(
-    "processed/fact_matches/"
-)
-
-PROCESSED_DIM_TEAMS = s3_path(
-    "processed/dim_teams/"
-)
-
-PROCESSED_DIM_TEAMS_API_FOOTBALL = s3_path(
-    "processed/api_football/dim_teams/"
-)
-
+# STANDINGS
 PROCESSED_FACT_STANDINGS_API_FOOTBALL = s3_path(
     "processed/api_football/fact_standings/"
 )
