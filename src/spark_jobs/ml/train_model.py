@@ -1,4 +1,5 @@
 import os
+from xml.parsers.expat import model
 from pyspark.sql.functions import col, round as spark_round, when
 from pyspark.ml.functions import vector_to_array
 from src.spark_jobs.utils.s3_paths import s3_path
@@ -6,7 +7,7 @@ from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from src.spark_jobs.utils.spark_session import create_spark_session
-from src.spark_jobs.utils.s3_paths import PROCESSED_ML_TRAINING_DATASET
+from src.spark_jobs.utils.s3_paths import (PROCESSED_ML_TRAINING_DATASET, LOCAL_RANDOM_FOREST_MODEL)
 
 def main():
     spark = create_spark_session("Entrenamiento de Modelo ML - Partidos")
@@ -48,6 +49,13 @@ def main():
     )
     model = rf.fit(train_data)
 
+    # Guardar modelo entrenado en local
+    model.write().overwrite().save(LOCAL_RANDOM_FOREST_MODEL)
+
+    print(f"\nModelo guardado en: {LOCAL_RANDOM_FOREST_MODEL}")
+
+
+    # Evaluar modelo en el conjunto de prueba
     predictions = model.transform(test_data)
     print("\n=== EVALUACIÓN DEL MODELO ===")
     evaluator_acc = MulticlassClassificationEvaluator(

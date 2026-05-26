@@ -54,8 +54,10 @@ PROCESSED_TEAM_TRANSFERMARKT_MATCHES = s3_path("processed/team_transfermarkt_mat
 PROCESSED_FACT_STANDINGS_API_FOOTBALL = s3_path(
     "processed/api_football/fact_standings/"
 )
+PROCESSED_FACT_STANDINGS_FOOTBALL_DATA = s3_path("processed/football_data_org/fact_standings/")
 
 # ML
+PROCESSED_ML_FUTURE_DATASET = s3_path("processed/ml/future_dataset/")
 PROCESSED_ML_TRAINING_DATASET = s3_path(
     "processed/ml/training_dataset/"
 )
@@ -66,4 +68,11 @@ LOCAL_TEAM_TRANSFERMARKT_MANUAL_MAPPING = "file://" + os.path.join(
     "data",
     "reference",
     "team_transfermarkt_manual_mapping.csv"
+)
+
+LOCAL_RANDOM_FOREST_MODEL = "file://" + os.path.join(
+    BASE_DIR,
+    "data",
+    "output",
+    "random_forest_model"
 )
