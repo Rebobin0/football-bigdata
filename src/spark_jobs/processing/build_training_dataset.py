@@ -1,47 +1,72 @@
-from pyspark.sql.functions import col, when
+from pyspark.sql.functions import col, when, lit
 from src.spark_jobs.utils.spark_session import create_spark_session
 from src.spark_jobs.utils.s3_paths import (
     PROCESSED_ENRICHED_FACT_MATCHES,
     PROCESSED_ML_TRAINING_DATASET,
+    PROCESSED_FACT_STANDINGS_API_FOOTBALL,
+    s3_path
 )
+
+PROCESSED_FACT_STANDINGS_FOOTBALL_DATA = s3_path("processed/football_data_org/fact_standings/")
 
 def main():
     spark = create_spark_session("Build ML Training Dataset")
 
-    # Read enriched fact matches
+    # 1. Leer partidos enriquecidos con dinero
     df = spark.read.parquet(PROCESSED_ENRICHED_FACT_MATCHES)
 
-    # Build training dataset
-    df_training = (
+    # 2. Leer las dos fuentes de Standings
+    df_api = spark.read.parquet(PROCESSED_FACT_STANDINGS_API_FOOTBALL).withColumn("source", lit("api_football"))
+    df_fd = spark.read.parquet(PROCESSED_FACT_STANDINGS_FOOTBALL_DATA).withColumn("source", lit("football_data_org"))
+
+    # 3. Unir (Unificar) los standings verticalmente
+    cols = ["team_id", "league", "season", "source", "rank", "points", "goal_difference"]
+    df_standings = df_api.select(cols).unionByName(df_fd.select(cols))
+
+    # 4. Preparar prefijos local y visitante
+    home_standings = (
+        df_standings
+        .select(
+            col("team_id").alias("home_team_id"), col("league"), col("season"), col("source"),
+            col("rank").alias("home_rank"), col("points").alias("home_points"), col("goal_difference").alias("home_goal_diff")
+        )
+    )
+
+    away_standings = (
+        df_standings
+        .select(
+            col("team_id").alias("away_team_id"), col("league"), col("season"), col("source"),
+            col("rank").alias("away_rank"), col("points").alias("away_points"), col("goal_difference").alias("away_goal_diff")
+        )
+    )
+
+    # 5. Pegarle TODO a los partidos (haciendo join por ID, Liga, Temporada y Fuente)
+    df_enriched_with_standings = (
         df
+        .join(home_standings, on=["league", "season", "source", "home_team_id"], how="left")
+        .join(away_standings, on=["league", "season", "source", "away_team_id"], how="left")
+    )
+
+    # 6. Construir dataset final para Machine Learning
+    df_training = (
+        df_enriched_with_standings
         .filter(col("home_goals").isNotNull())
         .filter(col("away_goals").isNotNull())
         .filter(col("result").isin("HOME_WIN", "DRAW", "AWAY_WIN"))
         .select(
-            col("match_id"),
-            col("match_date"),
-            col("league"),
-            col("season"),
-            col("source"),
+            col("match_id"), col("match_date"), col("league"), col("season"), col("source"),
+            col("home_team_id"), col("home_team_name"), col("away_team_id"), col("away_team_name"),
+            col("home_goals"), col("away_goals"),
+            
+            # Dinero
+            col("home_squad_market_value_eur"), col("away_squad_market_value_eur"), col("market_value_diff_eur"),
+            col("home_avg_player_market_value_eur"), col("away_avg_player_market_value_eur"),
+            col("home_players_count"), col("away_players_count"),
 
-            col("home_team_id"),
-            col("home_team_name"),
-            col("away_team_id"),
-            col("away_team_name"),
-
-            col("home_goals"),
-            col("away_goals"),
-            col("home_goals_halftime"),
-            col("away_goals_halftime"),
-
-            col("home_squad_market_value_eur"),
-            col("away_squad_market_value_eur"),
-            col("market_value_diff_eur"),
-
-            col("home_avg_player_market_value_eur"),
-            col("away_avg_player_market_value_eur"),
-            col("home_players_count"),
-            col("away_players_count"),
+            # Deportivo
+            col("home_rank"), col("away_rank"), 
+            col("home_points"), col("away_points"), 
+            col("home_goal_diff"), col("away_goal_diff"),
 
             col("result")
         )
@@ -53,30 +78,23 @@ def main():
         )
     )
 
-    # Verify the training dataset
-    print("\n=== TRAINING DATASET SCHEMA ===")
-    df_training.printSchema()
+    # === NUEVO: GUARDAR PARTIDOS FUTUROS (Aún no jugados) ===
+    df_future = (
+        df_enriched_with_standings
+        .filter(col("home_goals").isNull()) # Filtramos los que aún no tienen resultado
+    )
 
-    print("\n=== TOTAL ROWS ===")
-    print(df_training.count())
+    PROCESSED_ML_FUTURE_DATASET = s3_path("processed/ml/future_dataset/")
+    
+    (
+        df_future
+        .write
+        .mode("overwrite")
+        .partitionBy("league", "season")
+        .parquet(PROCESSED_ML_FUTURE_DATASET)
+    )
+    print(f"\nPartidos futuros guardados en: {PROCESSED_ML_FUTURE_DATASET}")
 
-    print("\n=== TARGET DISTRIBUTION ===")
-    df_training.groupBy("result", "target").count().orderBy("target").show()
-
-    print("\n=== ROWS BY LEAGUE AND SEASON ===")
-    df_training.groupBy("league", "season").count().orderBy("league", "season").show(100, truncate=False)
-
-    print("\n=== NULL MARKET VALUE CHECK ===")
-    df_training.select(
-        "home_squad_market_value_eur",
-        "away_squad_market_value_eur",
-        "market_value_diff_eur"
-    ).summary("count").show()
-
-    print("\n=== SAMPLE ===")
-    df_training.show(20, truncate=False)
-
-    # Write the training dataset to S3
     (
         df_training
         .write
@@ -85,8 +103,7 @@ def main():
         .parquet(PROCESSED_ML_TRAINING_DATASET)
     )
 
-    print(f"\nData written to: {PROCESSED_ML_TRAINING_DATASET}")
-
+    print(f"\nDataset listo y guardado en S3")
     spark.stop()
 
 if __name__ == "__main__":
