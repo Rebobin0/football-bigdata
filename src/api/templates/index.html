@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Football Predictions</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d2e;
+      --border: #2a2d3e;
+      --text-muted: #7a7f9a;
+      --blue: #4a7fff;
+      --yellow: #f0a500;
+      --red: #e04a4a;
+    }
+    body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .navbar { background: var(--surface) !important; border-bottom: 1px solid var(--border); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+    .nav-tabs { border-color: var(--border); }
+    .nav-tabs .nav-link { color: var(--text-muted); border-color: transparent; }
+    .nav-tabs .nav-link.active { background: var(--surface); border-color: var(--border) var(--border) var(--surface); color: #fff; }
+    .nav-tabs .nav-link:hover:not(.active) { color: #ccc; border-color: transparent; }
+    .form-control, .form-select {
+      background: var(--surface); border-color: var(--border);
+      color: #e0e0e0;
+    }
+    .form-control:focus, .form-select:focus {
+      background: var(--surface); color: #e0e0e0;
+      border-color: var(--blue); box-shadow: 0 0 0 .2rem rgba(74,127,255,.2);
+    }
+    .form-control::placeholder { color: var(--text-muted); }
+    .badge-liga {
+      font-size: .7rem; background: var(--border); color: var(--text-muted);
+      padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+    }
+    .match-card { transition: transform .15s, box-shadow .15s; }
+    .match-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+    .prob-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .prob-label { width: 70px; font-size: .78rem; color: var(--text-muted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .prob-track { flex: 1; background: var(--bg); border-radius: 4px; height: 7px; overflow: hidden; }
+    .prob-fill { height: 100%; border-radius: 4px; transition: width .6s ease; }
+    .prob-pct { width: 42px; font-size: .78rem; text-align: right; }
+    .result-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-dropdown {
+      position: absolute; z-index: 1050; width: 100%;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; max-height: 220px; overflow-y: auto;
+      display: none; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    }
+    .autocomplete-item {
+      padding: 9px 14px; cursor: pointer;
+      border-bottom: 1px solid var(--border); font-size: .9rem;
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover, .autocomplete-item.active { background: var(--border); }
+    .vs-badge { font-size: 1.2rem; font-weight: 700; color: var(--text-muted); }
+    .spinner-wrap { display: none; justify-content: center; padding: 30px; }
+    #predictionsGrid .col { display: flex; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark mb-4">
+  <div class="container-lg">
+    <span class="navbar-brand fw-bold fs-5">⚽ Football Predictions</span>
+  </div>
+</nav>
+
+<div class="container-lg pb-5">
+
+  <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-browse" type="button">
+        Predicciones generadas
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-predict" type="button">
+        Predicción on-demand
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- ── TAB 1: Predicciones pre-generadas ── -->
+    <div class="tab-pane fade show active" id="tab-browse" role="tabpanel">
+
+      <div class="row g-2 mb-4">
+        <div class="col-md-4">
+          <select class="form-select" id="filterLeague">
+            <option value="">Todas las ligas</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <input class="form-control" id="filterTeam" placeholder="Buscar equipo...">
+        </div>
+        <div class="col-md-4">
+          <select class="form-select" id="filterResult">
+            <option value="">Todos los pronósticos</option>
+            <option value="Gana Local">Gana Local</option>
+            <option value="Empate">Empate</option>
+            <option value="Gana Visitante">Gana Visitante</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3" id="predictionsGrid"></div>
+      <p id="noResults" class="text-center mt-5" style="color:var(--text-muted);display:none">
+        No se encontraron partidos con esos filtros.
+      </p>
+      <div class="spinner-wrap" id="browseSpinner">
+        <div class="spinner-border text-primary"></div>
+      </div>
+    </div>
+
+    <!-- ── TAB 2: Predicción on-demand ── -->
+    <div class="tab-pane fade" id="tab-predict" role="tabpanel">
+      <div class="row justify-content-center">
+        <div class="col-lg-7">
+
+          <div class="card p-4 mb-4">
+            <h6 class="text-center mb-4" style="color:var(--text-muted);letter-spacing:.05em;text-transform:uppercase;font-size:.8rem">
+              Selecciona el enfrentamiento
+            </h6>
+            <div class="row g-3 align-items-end">
+              <div class="col-5">
+                <label class="form-label small" style="color:var(--text-muted)">Equipo local</label>
+                <div class="autocomplete-wrap">
+                  <input class="form-control" id="homeSearch" placeholder="Buscar..." autocomplete="off">
+                  <input type="hidden" id="homeTeam">
+                  <div class="autocomplete-dropdown" id="homeDropdown"></div>
+                </div>
+              </div>
+              <div class="col-2 text-center pb-1">
+                <span class="vs-badge">VS</span>
+              </div>
+              <div class="col-5">
+                <label class="form-label small" style="color:var(--text-muted)">Equipo visitante</label>
+                <div class="autocomplete-wrap">
+                  <input class="form-control" id="awaySearch" placeholder="Buscar..." autocomplete="off">
+                  <input type="hidden" id="awayTeam">
+                  <div class="autocomplete-dropdown" id="awayDropdown"></div>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-4">
+              <button class="btn btn-primary px-5 py-2" id="predictBtn" onclick="runPredict()">
+                Predecir resultado
+              </button>
+            </div>
+          </div>
+
+          <div id="predictionResult" style="display:none">
+            <div class="spinner-wrap" id="predictSpinner">
+              <div class="spinner-border text-primary"></div>
+            </div>
+            <div class="result-box" id="resultContent" style="display:none"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const LEAGUE_LABELS = {
+  la_liga: 'La Liga', premier_league: 'Premier League',
+  bundesliga: 'Bundesliga', serie_a: 'Serie A', ligue_1: 'Ligue 1',
+  eredivisie: 'Eredivisie', primeira_liga: 'Primeira Liga'
+};
+
+const COLORS = { 'Gana Local': '#4a7fff', 'Empate': '#f0a500', 'Gana Visitante': '#e04a4a' };
+
+let allPredictions = [], allTeams = [];
+
+function leagueLabel(l) { return LEAGUE_LABELS[l] || l; }
+function color(p) { return COLORS[p] || '#888'; }
+
+// ── Render helpers ──────────────────────────────────────────
+
+function probRow(label, value, col) {
+  return `<div class="prob-row">
+    <span class="prob-label" title="${label}">${label}</span>
+    <div class="prob-track">
+      <div class="prob-fill" style="width:${value}%;background:${col}"></div>
+    </div>
+    <span class="prob-pct">${value}%</span>
+  </div>`;
+}
+
+function matchCard(m) {
+  const col = color(m.pronostico);
+  const date = m.fecha ? m.fecha.split(' ')[0] : '';
+  return `<div class="col match-card">
+    <div class="card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge-liga">${leagueLabel(m.liga)}</span>
+        <small style="color:var(--text-muted)">${date}</small>
+      </div>
+      <div class="text-center my-3">
+        <div class="fw-semibold mb-1">${m.local}</div>
+        <small style="color:var(--text-muted)">vs</small>
+        <div class="fw-semibold mt-1">${m.visitante}</div>
+      </div>
+      <div class="text-center mb-3">
+        <span class="badge rounded-pill px-3 py-2" style="background:${col};font-size:.82rem">${m.pronostico}</span>
+      </div>
+      <div class="mt-auto">
+        ${probRow('Local', m.prob_gana_local, '#4a7fff')}
+        ${probRow('Empate', m.prob_empate, '#f0a500')}
+        ${probRow('Visitante', m.prob_gana_visitante, '#e04a4a')}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Tab 1: Browse ───────────────────────────────────────────
+
+function renderPredictions(data) {
+  const grid = document.getElementById('predictionsGrid');
+  const noRes = document.getElementById('noResults');
+  grid.innerHTML = data.length ? data.map(matchCard).join('') : '';
+  noRes.style.display = data.length ? 'none' : 'block';
+}
+
+function applyFilters() {
+  const league = document.getElementById('filterLeague').value;
+  const team   = document.getElementById('filterTeam').value.toLowerCase();
+  const result = document.getElementById('filterResult').value;
+  renderPredictions(allPredictions.filter(m =>
+    (!league || m.liga === league) &&
+    (!team   || m.local.toLowerCase().includes(team) || m.visitante.toLowerCase().includes(team)) &&
+    (!result || m.pronostico === result)
+  ));
+}
+
+async function loadPredictions() {
+  document.getElementById('browseSpinner').style.display = 'flex';
+  try {
+    const res = await fetch('/api/predictions');
+    allPredictions = await res.json();
+    const leagues = [...new Set(allPredictions.map(m => m.liga))].sort();
+    const sel = document.getElementById('filterLeague');
+    leagues.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l; opt.textContent = leagueLabel(l);
+      sel.appendChild(opt);
+    });
+    renderPredictions(allPredictions);
+    ['filterLeague','filterTeam','filterResult'].forEach(id =>
+      document.getElementById(id).addEventListener('input', applyFilters)
+    );
+  } finally {
+    document.getElementById('browseSpinner').style.display = 'none';
+  }
+}
+
+// ── Tab 2: Autocomplete ─────────────────────────────────────
+
+async function loadTeams() {
+  const res = await fetch('/api/teams');
+  allTeams = await res.json();
+}
+
+function setupAutocomplete(inputId, hiddenId, dropdownId) {
+  const input    = document.getElementById(inputId);
+  const hidden   = document.getElementById(hiddenId);
+  const dropdown = document.getElementById(dropdownId);
+  let activeIdx  = -1;
+
+  function showMatches(q) {
+    const matches = allTeams
+      .filter(t => t.team_name.toLowerCase().includes(q.toLowerCase()))
+      .slice(0, 12);
+    if (!matches.length) { dropdown.style.display = 'none'; return; }
+    dropdown.innerHTML = matches.map((t, i) =>
+      `<div class="autocomplete-item" data-name="${t.team_name}" data-idx="${i}">
+         ${t.team_name}
+         <span style="color:var(--text-muted);font-size:.8rem;margin-left:6px">${leagueLabel(t.league)}</span>
+       </div>`
+    ).join('');
+    dropdown.style.display = 'block';
+    activeIdx = -1;
+    dropdown.querySelectorAll('.autocomplete-item').forEach(el => {
+      el.addEventListener('mousedown', e => {
+        e.preventDefault();
+        selectTeam(el.dataset.name);
+      });
+    });
+  }
+
+  function selectTeam(name) {
+    input.value = name;
+    hidden.value = name;
+    dropdown.style.display = 'none';
+    activeIdx = -1;
+  }
+
+  input.addEventListener('input', () => {
+    hidden.value = '';
+    const q = input.value.trim();
+    q.length >= 2 ? showMatches(q) : (dropdown.style.display = 'none');
+  });
+
+  input.addEventListener('keydown', e => {
+    const items = dropdown.querySelectorAll('.autocomplete-item');
+    if (!items.length || dropdown.style.display === 'none') return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIdx = Math.min(activeIdx + 1, items.length - 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIdx = Math.max(activeIdx - 1, 0);
+    } else if (e.key === 'Enter' && activeIdx >= 0) {
+      e.preventDefault();
+      selectTeam(items[activeIdx].dataset.name);
+      return;
+    } else { return; }
+    items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+    items[activeIdx]?.scrollIntoView({ block: 'nearest' });
+  });
+
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+}
+
+// ── Tab 2: Predict ──────────────────────────────────────────
+
+async function runPredict() {
+  const home = document.getElementById('homeTeam').value || document.getElementById('homeSearch').value.trim();
+  const away = document.getElementById('awayTeam').value || document.getElementById('awaySearch').value.trim();
+
+  if (!home || !away) { alert('Selecciona ambos equipos.'); return; }
+  if (home === away)  { alert('Los equipos no pueden ser el mismo.'); return; }
+
+  const resultDiv   = document.getElementById('predictionResult');
+  const spinner     = document.getElementById('predictSpinner');
+  const contentDiv  = document.getElementById('resultContent');
+
+  resultDiv.style.display  = 'block';
+  spinner.style.display    = 'flex';
+  contentDiv.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ home_team: home, away_team: away })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Error desconocido');
+    }
+    const d = await res.json();
+    const col = color(d.pronostico);
+
+    contentDiv.innerHTML = `
+      <div class="text-center mb-4">
+        <div class="d-flex justify-content-center align-items-center gap-4 mb-3 flex-wrap">
+          <div class="text-center">
+            <div class="fw-bold fs-5">${d.local}</div>
+            <small style="color:var(--text-muted)">${leagueLabel(d.liga_local)}</small>
+          </div>
+          <span class="vs-badge">VS</span>
+          <div class="text-center">
+            <div class="fw-bold fs-5">${d.visitante}</div>
+            <small style="color:var(--text-muted)">${leagueLabel(d.liga_visitante)}</small>
+          </div>
+        </div>
+        <span class="badge rounded-pill fs-6 px-4 py-2" style="background:${col}">${d.pronostico}</span>
+      </div>
+      <hr style="border-color:var(--border)">
+      <div class="mt-3 px-2">
+        ${probRow(d.local,    d.prob_gana_local,    '#4a7fff')}
+        ${probRow('Empate',   d.prob_empate,         '#f0a500')}
+        ${probRow(d.visitante, d.prob_gana_visitante, '#e04a4a')}
+      </div>`;
+    contentDiv.style.display = 'block';
+  } catch (err) {
+    contentDiv.innerHTML = `<div class="alert alert-danger mb-0">${err.message}</div>`;
+    contentDiv.style.display = 'block';
+  } finally {
+    spinner.style.display = 'none';
+  }
+}
+
+// ── Init ────────────────────────────────────────────────────
+loadPredictions();
+loadTeams().then(() => {
+  setupAutocomplete('homeSearch', 'homeTeam', 'homeDropdown');
+  setupAutocomplete('awaySearch', 'awayTeam', 'awayDropdown');
+});
+</script>
+</body>
+</html>
