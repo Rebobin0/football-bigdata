@@ -12,18 +12,14 @@ PROCESSED_FACT_STANDINGS_FOOTBALL_DATA = s3_path("processed/football_data_org/fa
 def main():
     spark = create_spark_session("Build ML Training Dataset")
 
-    # 1. Leer partidos enriquecidos con dinero
     df = spark.read.parquet(PROCESSED_ENRICHED_FACT_MATCHES)
 
-    # 2. Leer las dos fuentes de Standings
     df_api = spark.read.parquet(PROCESSED_FACT_STANDINGS_API_FOOTBALL).withColumn("source", lit("api_football"))
     df_fd = spark.read.parquet(PROCESSED_FACT_STANDINGS_FOOTBALL_DATA).withColumn("source", lit("football_data_org"))
 
-    # 3. Unir (Unificar) los standings verticalmente
     cols = ["team_id", "league", "season", "source", "rank", "points", "goal_difference"]
     df_standings = df_api.select(cols).unionByName(df_fd.select(cols))
 
-    # 4. Preparar prefijos local y visitante
     home_standings = (
         df_standings
         .select(
@@ -40,14 +36,12 @@ def main():
         )
     )
 
-    # 5. Pegarle TODO a los partidos (haciendo join por ID, Liga, Temporada y Fuente)
     df_enriched_with_standings = (
         df
         .join(home_standings, on=["league", "season", "source", "home_team_id"], how="left")
         .join(away_standings, on=["league", "season", "source", "away_team_id"], how="left")
     )
 
-    # 6. Construir dataset final para Machine Learning
     df_training = (
         df_enriched_with_standings
         .filter(col("home_goals").isNotNull())
@@ -58,12 +52,10 @@ def main():
             col("home_team_id"), col("home_team_name"), col("away_team_id"), col("away_team_name"),
             col("home_goals"), col("away_goals"),
             
-            # Dinero
             col("home_squad_market_value_eur"), col("away_squad_market_value_eur"), col("market_value_diff_eur"),
             col("home_avg_player_market_value_eur"), col("away_avg_player_market_value_eur"),
             col("home_players_count"), col("away_players_count"),
 
-            # Deportivo
             col("home_rank"), col("away_rank"), 
             col("home_points"), col("away_points"), 
             col("home_goal_diff"), col("away_goal_diff"),
@@ -78,10 +70,9 @@ def main():
         )
     )
 
-    # === NUEVO: GUARDAR PARTIDOS FUTUROS (Aún no jugados) ===
     df_future = (
         df_enriched_with_standings
-        .filter(col("home_goals").isNull()) # Filtramos los que aún no tienen resultado
+        .filter(col("home_goals").isNull())
     )
 
     PROCESSED_ML_FUTURE_DATASET = s3_path("processed/ml/future_dataset/")
