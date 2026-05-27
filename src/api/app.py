@@ -80,7 +80,7 @@ def get_predictions():
 @app.get("/api/teams")
 def get_teams():
     return [
-        {"team_name": name, "league": data["league"]}
+        {"team_name": name, "league": data["league"], "logo_url": data.get("logo_url", "")}
         for name, data in sorted(team_stats.items(), key=lambda x: x[0])
     ]
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-bs-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,55 +10,111 @@
       --bg: #0f1117;
       --surface: #1a1d2e;
       --border: #2a2d3e;
-      --text-muted: #7a7f9a;
+      --muted: #8b90a8;
       --blue: #4a7fff;
       --yellow: #f0a500;
       --red: #e04a4a;
+      /* Override Bootstrap dark-theme variables to match our palette */
+      --bs-body-bg: #0f1117;
+      --bs-body-color: #e0e0e0;
+      --bs-secondary-color: #8b90a8;
+      --bs-border-color: #2a2d3e;
+      --bs-tertiary-bg: #1a1d2e;
     }
+
     body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+    /* ── Navbar ── */
     .navbar { background: var(--surface) !important; border-bottom: 1px solid var(--border); }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+
+    /* ── Cards ── */
+    .card { background: var(--surface); border-color: var(--border); border-radius: 10px; }
+
+    /* ── Tabs ── */
     .nav-tabs { border-color: var(--border); }
-    .nav-tabs .nav-link { color: var(--text-muted); border-color: transparent; }
-    .nav-tabs .nav-link.active { background: var(--surface); border-color: var(--border) var(--border) var(--surface); color: #fff; }
-    .nav-tabs .nav-link:hover:not(.active) { color: #ccc; border-color: transparent; }
+    .nav-tabs .nav-link { color: var(--muted); border-color: transparent; }
+    .nav-tabs .nav-link.active { background: var(--surface); border-color: var(--border) var(--border) var(--surface); color: #e0e0e0; }
+    .nav-tabs .nav-link:hover:not(.active) { color: #ccc; border-color: transparent; background: transparent; }
+
+    /* ── Forms ── */
     .form-control, .form-select {
-      background: var(--surface); border-color: var(--border);
+      background: var(--surface);
+      border-color: var(--border);
       color: #e0e0e0;
     }
+    .form-control::placeholder { color: var(--muted); }
     .form-control:focus, .form-select:focus {
-      background: var(--surface); color: #e0e0e0;
-      border-color: var(--blue); box-shadow: 0 0 0 .2rem rgba(74,127,255,.2);
+      background: var(--surface);
+      border-color: var(--blue);
+      color: #e0e0e0;
+      box-shadow: 0 0 0 .2rem rgba(74,127,255,.2);
     }
-    .form-control::placeholder { color: var(--text-muted); }
-    .badge-liga {
-      font-size: .7rem; background: var(--border); color: var(--text-muted);
-      padding: 3px 9px; border-radius: 20px; white-space: nowrap;
-    }
+    /* Fix native select option colors */
+    .form-select option { background: #1a1d2e; color: #e0e0e0; }
+
+    /* ── Match cards ── */
     .match-card { transition: transform .15s, box-shadow .15s; }
-    .match-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.4); }
-    .prob-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-    .prob-label { width: 70px; font-size: .78rem; color: var(--text-muted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .match-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.45); }
+
+    /* ── League badge ── */
+    .badge-liga {
+      font-size: .7rem;
+      background: var(--border);
+      color: #b0b4cc;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    /* ── Probability bars ── */
+    .prob-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .prob-label { width: 72px; font-size: .78rem; color: var(--muted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .prob-track { flex: 1; background: var(--bg); border-radius: 4px; height: 7px; overflow: hidden; }
     .prob-fill { height: 100%; border-radius: 4px; transition: width .6s ease; }
-    .prob-pct { width: 42px; font-size: .78rem; text-align: right; }
+    .prob-pct { width: 40px; font-size: .78rem; text-align: right; color: #e0e0e0; }
+
+    /* ── Result box (on-demand) ── */
     .result-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
+
+    /* ── Autocomplete ── */
     .autocomplete-wrap { position: relative; }
     .autocomplete-dropdown {
-      position: absolute; z-index: 1050; width: 100%;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 6px; max-height: 220px; overflow-y: auto;
-      display: none; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+      position: absolute;
+      z-index: 1050;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      max-height: 230px;
+      overflow-y: auto;
+      display: none;
+      box-shadow: 0 8px 28px rgba(0,0,0,.55);
     }
     .autocomplete-item {
-      padding: 9px 14px; cursor: pointer;
-      border-bottom: 1px solid var(--border); font-size: .9rem;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      font-size: .88rem;
+      color: #e0e0e0;
     }
     .autocomplete-item:last-child { border-bottom: none; }
-    .autocomplete-item:hover, .autocomplete-item.active { background: var(--border); }
-    .vs-badge { font-size: 1.2rem; font-weight: 700; color: var(--text-muted); }
-    .spinner-wrap { display: none; justify-content: center; padding: 30px; }
-    #predictionsGrid .col { display: flex; }
+    .autocomplete-item:hover, .autocomplete-item.ac-active { background: var(--border); }
+    .autocomplete-item .item-league { color: var(--muted); font-size: .75rem; margin-left: auto; }
+
+    /* ── Team logo ── */
+    .team-logo { object-fit: contain; flex-shrink: 0; }
+    .team-logo-sm { width: 22px; height: 22px; }
+    .team-logo-md { width: 32px; height: 32px; }
+    .team-logo-lg { width: 44px; height: 44px; }
+
+    /* ── Spinner ── */
+    .spinner-wrap { display: none; justify-content: center; padding: 40px; }
+
+    /* ── VS badge ── */
+    .vs-badge { font-size: 1.15rem; font-weight: 700; color: var(--muted); }
   </style>
 </head>
 <body>
@@ -86,7 +142,9 @@
 
   <div class="tab-content">
 
-    <!-- ── TAB 1: Predicciones pre-generadas ── -->
+    <!-- ──────────────────────────────────────────────────
+         TAB 1 — Predicciones pre-generadas
+    ────────────────────────────────────────────────── -->
     <div class="tab-pane fade show active" id="tab-browse" role="tabpanel">
 
       <div class="row g-2 mb-4">
@@ -108,52 +166,68 @@
         </div>
       </div>
 
-      <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3" id="predictionsGrid"></div>
-      <p id="noResults" class="text-center mt-5" style="color:var(--text-muted);display:none">
-        No se encontraron partidos con esos filtros.
-      </p>
       <div class="spinner-wrap" id="browseSpinner">
         <div class="spinner-border text-primary"></div>
       </div>
+
+      <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3" id="predictionsGrid"></div>
+      <p id="noResults" class="text-center mt-5" style="color:var(--muted);display:none">
+        No se encontraron partidos con esos filtros.
+      </p>
     </div>
 
-    <!-- ── TAB 2: Predicción on-demand ── -->
+    <!-- ──────────────────────────────────────────────────
+         TAB 2 — Predicción on-demand
+    ────────────────────────────────────────────────── -->
     <div class="tab-pane fade" id="tab-predict" role="tabpanel">
       <div class="row justify-content-center">
         <div class="col-lg-7">
 
           <div class="card p-4 mb-4">
-            <h6 class="text-center mb-4" style="color:var(--text-muted);letter-spacing:.05em;text-transform:uppercase;font-size:.8rem">
+            <p class="text-center mb-4" style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:0">
               Selecciona el enfrentamiento
-            </h6>
-            <div class="row g-3 align-items-end">
+            </p>
+
+            <div class="row g-3 align-items-end mt-1">
               <div class="col-5">
-                <label class="form-label small" style="color:var(--text-muted)">Equipo local</label>
+                <label class="form-label small" style="color:var(--muted)">Equipo local</label>
                 <div class="autocomplete-wrap">
                   <input class="form-control" id="homeSearch" placeholder="Buscar..." autocomplete="off">
                   <input type="hidden" id="homeTeam">
                   <div class="autocomplete-dropdown" id="homeDropdown"></div>
                 </div>
+                <div id="homePreview" class="d-none mt-2 d-flex align-items-center gap-2">
+                  <img id="homeLogoPreview" src="" class="team-logo team-logo-sm" onerror="this.style.display='none'">
+                  <small id="homeNamePreview" style="color:var(--muted)"></small>
+                </div>
               </div>
+
               <div class="col-2 text-center pb-1">
                 <span class="vs-badge">VS</span>
               </div>
+
               <div class="col-5">
-                <label class="form-label small" style="color:var(--text-muted)">Equipo visitante</label>
+                <label class="form-label small" style="color:var(--muted)">Equipo visitante</label>
                 <div class="autocomplete-wrap">
                   <input class="form-control" id="awaySearch" placeholder="Buscar..." autocomplete="off">
                   <input type="hidden" id="awayTeam">
                   <div class="autocomplete-dropdown" id="awayDropdown"></div>
                 </div>
+                <div id="awayPreview" class="d-none mt-2 d-flex align-items-center gap-2">
+                  <img id="awayLogoPreview" src="" class="team-logo team-logo-sm" onerror="this.style.display='none'">
+                  <small id="awayNamePreview" style="color:var(--muted)"></small>
+                </div>
               </div>
             </div>
+
             <div class="text-center mt-4">
-              <button class="btn btn-primary px-5 py-2" id="predictBtn" onclick="runPredict()">
+              <button class="btn btn-primary px-5 py-2" onclick="runPredict()">
                 Predecir resultado
               </button>
             </div>
           </div>
 
+          <!-- Result -->
           <div id="predictionResult" style="display:none">
             <div class="spinner-wrap" id="predictSpinner">
               <div class="spinner-border text-primary"></div>
@@ -165,66 +239,82 @@
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- /tab-content -->
+</div><!-- /container -->
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// ── Constants ─────────────────────────────────────────────
+
 const LEAGUE_LABELS = {
   la_liga: 'La Liga', premier_league: 'Premier League',
   bundesliga: 'Bundesliga', serie_a: 'Serie A', ligue_1: 'Ligue 1',
-  eredivisie: 'Eredivisie', primeira_liga: 'Primeira Liga'
+  eredivisie: 'Eredivisie', primeira_liga: 'Primeira Liga',
 };
+const RESULT_COLOR = { 'Gana Local': '#4a7fff', 'Empate': '#f0a500', 'Gana Visitante': '#e04a4a' };
 
-const COLORS = { 'Gana Local': '#4a7fff', 'Empate': '#f0a500', 'Gana Visitante': '#e04a4a' };
-
-let allPredictions = [], allTeams = [];
+let allPredictions = [], allTeams = [], teamLogoMap = {}, teamLeagueMap = {};
 
 function leagueLabel(l) { return LEAGUE_LABELS[l] || l; }
-function color(p) { return COLORS[p] || '#888'; }
+function resultColor(p) { return RESULT_COLOR[p] || '#888'; }
+function logoTag(url, cls = 'team-logo-sm') {
+  if (!url) return '';
+  return `<img src="${url}" class="team-logo ${cls}" onerror="this.style.display='none'">`;
+}
 
-// ── Render helpers ──────────────────────────────────────────
+// ── Probability row ────────────────────────────────────────
 
-function probRow(label, value, col) {
+function probRow(label, logoUrl, value, col) {
+  const logo = logoUrl ? `<img src="${logoUrl}" class="team-logo" style="width:16px;height:16px;object-fit:contain;flex-shrink:0" onerror="this.style.display='none'">` : '';
   return `<div class="prob-row">
-    <span class="prob-label" title="${label}">${label}</span>
-    <div class="prob-track">
-      <div class="prob-fill" style="width:${value}%;background:${col}"></div>
-    </div>
+    <span class="prob-label d-flex align-items-center justify-content-end gap-1">${logo}<span title="${label}" style="overflow:hidden;text-overflow:ellipsis">${label}</span></span>
+    <div class="prob-track"><div class="prob-fill" style="width:${value}%;background:${col}"></div></div>
     <span class="prob-pct">${value}%</span>
   </div>`;
 }
 
+// ── Match card (Tab 1) ─────────────────────────────────────
+
 function matchCard(m) {
-  const col = color(m.pronostico);
+  const col  = resultColor(m.pronostico);
   const date = m.fecha ? m.fecha.split(' ')[0] : '';
+  const homeLogo = teamLogoMap[m.local]    || '';
+  const awayLogo = teamLogoMap[m.visitante] || '';
+
   return `<div class="col match-card">
     <div class="card p-3 h-100">
       <div class="d-flex justify-content-between align-items-center mb-2">
         <span class="badge-liga">${leagueLabel(m.liga)}</span>
-        <small style="color:var(--text-muted)">${date}</small>
+        <small style="color:var(--muted)">${date}</small>
       </div>
-      <div class="text-center my-3">
-        <div class="fw-semibold mb-1">${m.local}</div>
-        <small style="color:var(--text-muted)">vs</small>
-        <div class="fw-semibold mt-1">${m.visitante}</div>
+
+      <div class="d-flex flex-column gap-1 my-3">
+        <div class="d-flex align-items-center gap-2">
+          ${logoTag(homeLogo)} <span class="fw-semibold">${m.local}</span>
+        </div>
+        <div class="text-center" style="color:var(--muted);font-size:.78rem">vs</div>
+        <div class="d-flex align-items-center gap-2">
+          ${logoTag(awayLogo)} <span class="fw-semibold">${m.visitante}</span>
+        </div>
       </div>
+
       <div class="text-center mb-3">
         <span class="badge rounded-pill px-3 py-2" style="background:${col};font-size:.82rem">${m.pronostico}</span>
       </div>
+
       <div class="mt-auto">
-        ${probRow('Local', m.prob_gana_local, '#4a7fff')}
-        ${probRow('Empate', m.prob_empate, '#f0a500')}
-        ${probRow('Visitante', m.prob_gana_visitante, '#e04a4a')}
+        ${probRow('Local',     homeLogo, m.prob_gana_local,    '#4a7fff')}
+        ${probRow('Empate',    '',       m.prob_empate,         '#f0a500')}
+        ${probRow('Visitante', awayLogo, m.prob_gana_visitante, '#e04a4a')}
       </div>
     </div>
   </div>`;
 }
 
-// ── Tab 1: Browse ───────────────────────────────────────────
+// ── Tab 1: Browse & filter ─────────────────────────────────
 
 function renderPredictions(data) {
-  const grid = document.getElementById('predictionsGrid');
+  const grid  = document.getElementById('predictionsGrid');
   const noRes = document.getElementById('noResults');
   grid.innerHTML = data.length ? data.map(matchCard).join('') : '';
   noRes.style.display = data.length ? 'none' : 'block';
@@ -244,8 +334,7 @@ function applyFilters() {
 async function loadPredictions() {
   document.getElementById('browseSpinner').style.display = 'flex';
   try {
-    const res = await fetch('/api/predictions');
-    allPredictions = await res.json();
+    allPredictions = await fetch('/api/predictions').then(r => r.json());
     const leagues = [...new Set(allPredictions.map(m => m.liga))].sort();
     const sel = document.getElementById('filterLeague');
     leagues.forEach(l => {
@@ -262,32 +351,45 @@ async function loadPredictions() {
   }
 }
 
-// ── Tab 2: Autocomplete ─────────────────────────────────────
+// ── Tab 2: Autocomplete ────────────────────────────────────
 
 async function loadTeams() {
-  const res = await fetch('/api/teams');
-  allTeams = await res.json();
+  allTeams = await fetch('/api/teams').then(r => r.json());
+  allTeams.forEach(t => {
+    teamLogoMap[t.team_name]   = t.logo_url || '';
+    teamLeagueMap[t.team_name] = t.league   || '';
+  });
 }
 
-function setupAutocomplete(inputId, hiddenId, dropdownId) {
+function setupAutocomplete(inputId, hiddenId, dropdownId, previewId, logoPreviewId, namePreviewId) {
   const input    = document.getElementById(inputId);
   const hidden   = document.getElementById(hiddenId);
   const dropdown = document.getElementById(dropdownId);
+  const preview  = document.getElementById(previewId);
+  const logoImg  = document.getElementById(logoPreviewId);
+  const nameEl   = document.getElementById(namePreviewId);
   let activeIdx  = -1;
 
-  function showMatches(q) {
+  function renderItems(q) {
     const matches = allTeams
       .filter(t => t.team_name.toLowerCase().includes(q.toLowerCase()))
       .slice(0, 12);
     if (!matches.length) { dropdown.style.display = 'none'; return; }
-    dropdown.innerHTML = matches.map((t, i) =>
-      `<div class="autocomplete-item" data-name="${t.team_name}" data-idx="${i}">
-         ${t.team_name}
-         <span style="color:var(--text-muted);font-size:.8rem;margin-left:6px">${leagueLabel(t.league)}</span>
-       </div>`
-    ).join('');
+
+    dropdown.innerHTML = matches.map((t, i) => {
+      const logo = t.logo_url
+        ? `<img src="${t.logo_url}" class="team-logo team-logo-sm" onerror="this.style.display='none'">`
+        : `<span style="width:22px;display:inline-block"></span>`;
+      return `<div class="autocomplete-item" data-name="${t.team_name}" data-idx="${i}">
+        ${logo}
+        <span>${t.team_name}</span>
+        <span class="item-league">${leagueLabel(t.league)}</span>
+      </div>`;
+    }).join('');
+
     dropdown.style.display = 'block';
     activeIdx = -1;
+
     dropdown.querySelectorAll('.autocomplete-item').forEach(el => {
       el.addEventListener('mousedown', e => {
         e.preventDefault();
@@ -297,16 +399,27 @@ function setupAutocomplete(inputId, hiddenId, dropdownId) {
   }
 
   function selectTeam(name) {
-    input.value = name;
+    input.value  = name;
     hidden.value = name;
     dropdown.style.display = 'none';
     activeIdx = -1;
+
+    const logo = teamLogoMap[name] || '';
+    if (logo) {
+      logoImg.src = logo;
+      logoImg.style.display = '';
+    } else {
+      logoImg.style.display = 'none';
+    }
+    nameEl.textContent = leagueLabel(teamLeagueMap[name] || '');
+    preview.classList.remove('d-none');
   }
 
   input.addEventListener('input', () => {
     hidden.value = '';
+    preview.classList.add('d-none');
     const q = input.value.trim();
-    q.length >= 2 ? showMatches(q) : (dropdown.style.display = 'none');
+    q.length >= 2 ? renderItems(q) : (dropdown.style.display = 'none');
   });
 
   input.addEventListener('keydown', e => {
@@ -322,8 +435,8 @@ function setupAutocomplete(inputId, hiddenId, dropdownId) {
       e.preventDefault();
       selectTeam(items[activeIdx].dataset.name);
       return;
-    } else { return; }
-    items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+    } else return;
+    items.forEach((el, i) => el.classList.toggle('ac-active', i === activeIdx));
     items[activeIdx]?.scrollIntoView({ block: 'nearest' });
   });
 
@@ -334,7 +447,7 @@ function setupAutocomplete(inputId, hiddenId, dropdownId) {
   });
 }
 
-// ── Tab 2: Predict ──────────────────────────────────────────
+// ── Tab 2: Predict ─────────────────────────────────────────
 
 async function runPredict() {
   const home = document.getElementById('homeTeam').value || document.getElementById('homeSearch').value.trim();
@@ -343,9 +456,9 @@ async function runPredict() {
   if (!home || !away) { alert('Selecciona ambos equipos.'); return; }
   if (home === away)  { alert('Los equipos no pueden ser el mismo.'); return; }
 
-  const resultDiv   = document.getElementById('predictionResult');
-  const spinner     = document.getElementById('predictSpinner');
-  const contentDiv  = document.getElementById('resultContent');
+  const resultDiv  = document.getElementById('predictionResult');
+  const spinner    = document.getElementById('predictSpinner');
+  const contentDiv = document.getElementById('resultContent');
 
   resultDiv.style.display  = 'block';
   spinner.style.display    = 'flex';
@@ -355,36 +468,38 @@ async function runPredict() {
     const res = await fetch('/api/predict', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ home_team: home, away_team: away })
+      body: JSON.stringify({ home_team: home, away_team: away }),
     });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || 'Error desconocido');
-    }
-    const d = await res.json();
-    const col = color(d.pronostico);
+    if (!res.ok) throw new Error((await res.json()).detail || 'Error desconocido');
+
+    const d        = await res.json();
+    const col      = resultColor(d.pronostico);
+    const homeLogo = teamLogoMap[d.local]     || '';
+    const awayLogo = teamLogoMap[d.visitante] || '';
+
+    const teamBlock = (name, logo, league) => `
+      <div class="text-center">
+        ${logo ? `<img src="${logo}" class="team-logo team-logo-lg d-block mx-auto mb-2" onerror="this.style.display='none'">` : ''}
+        <div class="fw-bold fs-6">${name}</div>
+        <small style="color:var(--muted)">${leagueLabel(league)}</small>
+      </div>`;
 
     contentDiv.innerHTML = `
       <div class="text-center mb-4">
         <div class="d-flex justify-content-center align-items-center gap-4 mb-3 flex-wrap">
-          <div class="text-center">
-            <div class="fw-bold fs-5">${d.local}</div>
-            <small style="color:var(--text-muted)">${leagueLabel(d.liga_local)}</small>
-          </div>
+          ${teamBlock(d.local,     homeLogo, d.liga_local)}
           <span class="vs-badge">VS</span>
-          <div class="text-center">
-            <div class="fw-bold fs-5">${d.visitante}</div>
-            <small style="color:var(--text-muted)">${leagueLabel(d.liga_visitante)}</small>
-          </div>
+          ${teamBlock(d.visitante, awayLogo, d.liga_visitante)}
         </div>
-        <span class="badge rounded-pill fs-6 px-4 py-2" style="background:${col}">${d.pronostico}</span>
+        <span class="badge rounded-pill fs-6 px-4 py-2 mt-2" style="background:${col}">${d.pronostico}</span>
       </div>
       <hr style="border-color:var(--border)">
       <div class="mt-3 px-2">
-        ${probRow(d.local,    d.prob_gana_local,    '#4a7fff')}
-        ${probRow('Empate',   d.prob_empate,         '#f0a500')}
-        ${probRow(d.visitante, d.prob_gana_visitante, '#e04a4a')}
+        ${probRow(d.local,    homeLogo, d.prob_gana_local,    '#4a7fff')}
+        ${probRow('Empate',   '',       d.prob_empate,         '#f0a500')}
+        ${probRow(d.visitante, awayLogo, d.prob_gana_visitante, '#e04a4a')}
       </div>`;
+
     contentDiv.style.display = 'block';
   } catch (err) {
     contentDiv.innerHTML = `<div class="alert alert-danger mb-0">${err.message}</div>`;
@@ -394,12 +509,14 @@ async function runPredict() {
   }
 }
 
-// ── Init ────────────────────────────────────────────────────
-loadPredictions();
-loadTeams().then(() => {
-  setupAutocomplete('homeSearch', 'homeTeam', 'homeDropdown');
-  setupAutocomplete('awaySearch', 'awayTeam', 'awayDropdown');
-});
+// ── Init ──────────────────────────────────────────────────
+
+(async () => {
+  await loadTeams();
+  setupAutocomplete('homeSearch', 'homeTeam', 'homeDropdown', 'homePreview', 'homeLogoPreview', 'homeNamePreview');
+  setupAutocomplete('awaySearch', 'awayTeam', 'awayDropdown', 'awayPreview', 'awayLogoPreview', 'awayNamePreview');
+  loadPredictions();  // no await — carga el tab 1 en paralelo
+})();
 </script>
 </body>
 </html>

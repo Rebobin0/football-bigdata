@@ -9,6 +9,7 @@ load_dotenv()
 
 S3_BUCKET = os.getenv("S3_BUCKET")
 TRAINING_PREFIX = "processed/ml/training_dataset/"
+LOGOS_PREFIX = "processed/fact_matches/"
 OUTPUT_DIR = "data/output"
 
 HOME_RENAME = {
@@ -60,6 +61,30 @@ def read_parquet_from_s3(bucket: str, prefix: str) -> pd.DataFrame:
     return pd.concat(dfs, ignore_index=True)
 
 
+def read_logos_from_s3(bucket: str, prefix: str) -> dict[str, str]:
+    """Lee solo home/away_team_name y logo de los fact_matches de API Football."""
+    s3 = boto3.client("s3")
+    paginator = s3.get_paginator("list_objects_v2")
+    logo_map: dict[str, str] = {}
+    logo_cols = ["home_team_name", "home_team_logo", "away_team_name", "away_team_logo"]
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            key = obj["Key"]
+            if not key.endswith(".parquet"):
+                continue
+            response = s3.get_object(Bucket=bucket, Key=key)
+            df = pd.read_parquet(io.BytesIO(response["Body"].read()), columns=logo_cols)
+            df_home = df[["home_team_name", "home_team_logo"]].rename(
+                columns={"home_team_name": "name", "home_team_logo": "logo"}
+            )
+            df_away = df[["away_team_name", "away_team_logo"]].rename(
+                columns={"away_team_name": "name", "away_team_logo": "logo"}
+            )
+            for _, row in pd.concat([df_home, df_away]).dropna().drop_duplicates("name").iterrows():
+                logo_map.setdefault(row["name"], row["logo"])
+    return logo_map
+
+
 def build_team_stats(df: pd.DataFrame) -> pd.DataFrame:
     df_home = df.rename(columns=HOME_RENAME)[["league", "season"] + list(HOME_RENAME.values())].dropna()
     df_away = df.rename(columns=AWAY_RENAME)[["league", "season"] + list(AWAY_RENAME.values())].dropna()
@@ -92,11 +117,22 @@ def main():
     print(f"\nDataset de entrenamiento guardado en: {training_path}")
 
     df_teams = build_team_stats(df)
+
+    print(f"\nLeyendo logos desde s3://{S3_BUCKET}/{LOGOS_PREFIX}")
+    try:
+        logo_map = read_logos_from_s3(S3_BUCKET, LOGOS_PREFIX)
+        df_teams["logo_url"] = df_teams["team_name"].map(logo_map).fillna("")
+        teams_with_logo = (df_teams["logo_url"] != "").sum()
+        print(f"Logos encontrados: {teams_with_logo}/{len(df_teams)} equipos")
+    except Exception as e:
+        print(f"AVISO: No se pudieron cargar logos: {e}")
+        df_teams["logo_url"] = ""
+
     team_stats_path = os.path.join(OUTPUT_DIR, "team_stats.json")
     df_teams.to_json(team_stats_path, orient="records", indent=2)
     print(f"Estadísticas de {len(df_teams)} equipos guardadas en: {team_stats_path}")
     print("\nPrimeros equipos exportados:")
-    print(df_teams[["team_name", "league", "rank", "points"]].head(10).to_string(index=False))
+    print(df_teams[["team_name", "league", "rank", "points", "logo_url"]].head(10).to_string(index=False))
 
 
 if __name__ == "__main__":
